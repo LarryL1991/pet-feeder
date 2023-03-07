@@ -1,0 +1,6 @@
+# Pet Feeder
+I created this ~11 October 2022 for a friend. I uploaded it to GitHub on 6 March 2023 as part of the #100DaysOfCode challenge. I have resumed working on this as of 6 March 2023.  
+# How it works
+This python script simply watches a Monero wallet of a given view-key for transactions. If a transaction of a large enough size comes through then it will trigger some external function (TBD).
+# Why I made this
+A friend of mine thought it would be neat to set up a livestream where his cats would be in a room. Inside the room would be a device that dispensed food/treats to the cats. The viewers of the stream would be able to donate, say, $0.25 worth of Monero to a wallet address that was given as part of the livestream. This is where the python script would come in. The python script would detect the transaction and then send the appropriate command to whatever device my friend set up. Unfortunately my friend is a bit too ambitious for his own good. I gave him a working product (although admittedly it was half-way-done) but he never pressed forward with it. I am now coming back to make a more complete product because I have put it off long enough. The #100DaysOfCode challenge has helped me to put some of my older projects back on the front burner for now.

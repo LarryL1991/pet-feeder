@@ -1,0 +1,5 @@
+*.log
+*.txt
+*.bat
+read-balance.py
+read-transactions.py
