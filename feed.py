@@ -5,7 +5,7 @@ from os.path import exists
 from os import system
 
 monero_wallet_rpc_url = "http://127.0.0.1:18082/json_rpc"
-pathToWalletFiles = ""
+pathToWalletFiles = "123"
 
 publicAddress = ""
 privateViewKey = ""
@@ -15,12 +15,13 @@ restoreHeight = 2712290 # can be 0
 
 
 class WalletClass():
-    def __init__(self, address, viewKey, fileName, password, url):
+    def __init__(self, address, viewKey, fileName, password, url, filePath):
         self.address = address
         self.viewKey = viewKey
         self.fileName = fileName
         self.password = password
         self.url = url
+        self.filePath = filePath
         self.headers = {'content-type': 'application/json'}
         self.rpc_input = ""
         self.response = ""
@@ -176,19 +177,21 @@ class WalletClass():
         self.close_wallet()
         # open wallet or create wallet
         #TODO: Add linux support (LOL)
-        if not exists(pathToWalletFiles + "\\" + walletFileName + ".keys"):
+        if not exists(self.filePath + "\\" + walletFileName + ".keys"):
+            print("wallet DOES NOT EXIST LOL!!")
+            print()
             if not self.create_wallet(restoreHeight, walletPassword):
-                print(f"Failed to create wallet {pathToWalletFiles}\{walletFileName}.keys\n")
+                print(f"Failed to create wallet {self.filePath}\{walletFileName}.keys\n")
                 self.cleanup()
                 return False
-            print("Wallet created: " + pathToWalletFiles + "\\" + walletFileName + ".keys\n")
+            print("Wallet created: " + self.filePath + "\\" + walletFileName + ".keys\n")
             return True
         
         elif self.open_wallet():
-            print("Wallet opened: " + pathToWalletFiles + "\\" + walletFileName + ".keys\n")
+            print("Wallet opened: " + self.filePath + "\\" + walletFileName + ".keys\n")
             return True
         else:
-            print(f"Failed to open wallet {pathToWalletFiles}\{walletFileName}.keys\n") 
+            print(f"Failed to open wallet {self.filePath}\{walletFileName}.keys\n") 
             self.cleanup()
             return False
         
@@ -201,15 +204,13 @@ class WalletClass():
 def main():
     print("working")
     with open("variables.txt", "r") as f:
-        pathToWalletFiles = f.readline()
-        publicAddress = f.readline()
-        privateViewKey = f.readline()
-    print(pathToWalletFiles)
-    print(publicAddress)
-    print(privateViewKey)
+        pathToWalletFiles = f.readline().strip()
+        publicAddress = f.readline().strip()
+        privateViewKey = f.readline().strip()
+
     try:
     
-        wallet = WalletClass(publicAddress, privateViewKey, walletFileName, walletPassword, monero_wallet_rpc_url)
+        wallet = WalletClass(publicAddress, privateViewKey, walletFileName, walletPassword, monero_wallet_rpc_url, pathToWalletFiles)
         
         if not wallet.init():
             print("Wallet failed to initialize, quitting")
