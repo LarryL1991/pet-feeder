@@ -1,5 +1,5 @@
 # Pet Feeder
-I created this ~11 October 2022 for a friend. I uploaded it to GitHub on 6 March 2023 as part of the #100DaysOfCode challenge. I have resumed working on this as of 6 March 2023.  
+I created this around 2022-10-11 for a friend. I uploaded it to GitHub on 2023-03-06 as part of the #100DaysOfCode challenge. I have resumed working on this as of 2023-03-06.  
 # How it works
 This python script simply watches a Monero wallet of a given view-key for transactions. If a transaction of a large enough size comes through then it will trigger some external function (TBD).
 # Why I made this

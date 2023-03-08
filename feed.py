@@ -11,17 +11,18 @@ publicAddress = ""
 privateViewKey = ""
 walletFileName = "wallet-with-view-key"
 walletPassword = ""
-restoreHeight = 2712290 # can be 0
+
 
 
 class WalletClass():
-    def __init__(self, address, viewKey, fileName, password, url, filePath):
+    def __init__(self, address, viewKey, fileName, password, url, filePath, restoreHeight):
         self.address = address
         self.viewKey = viewKey
         self.fileName = fileName
         self.password = password
         self.url = url
         self.filePath = filePath
+        self.restoreHeight = restoreHeight
         self.headers = {'content-type': 'application/json'}
         self.rpc_input = ""
         self.response = ""
@@ -55,7 +56,7 @@ class WalletClass():
             with open("Balance.log", "w") as f:
                 f.write(json.dumps(self.response.json(), indent=4))
                 
-    def wait_for_balance(self):
+    def wait_for_balance(self, restoreHeight):
         self.refresh(restoreHeight) #CHANGE
         self.get_balance()
         while self.balance <= 0:
@@ -126,10 +127,23 @@ class WalletClass():
         return True
     
     def close_wallet(self):
+        self.save_wallet()
         self.rpc_input = {
             "method":"close_wallet"
         }
         self.send_request()
+    
+        print("Closing Wallet (.close_wallet())")
+        self.print_response()
+    
+    def save_wallet(self):
+        self.rpc_input = {
+            "method":"store"
+        }
+        self.send_request()
+
+        print("Saving wallet (.save_wallet())")
+        self.print_response()
         
     def send_request(self):
         # add standard rpc values
@@ -171,16 +185,25 @@ class WalletClass():
                 f.write(json.dumps(self.response.json(), indent=4))
         
         return transactions
+    def auto_refresh(self, enable):
+        self.rpc_input = {
+            "method": "auto_refresh",
+            "params": {
+                "enable": enable
+            }
+        }
+        self.send_request()
+        print("autorefresh set to false (.auto_refresh(False))")
+        
     
     def init(self):
         
         self.close_wallet()
+        print("opening wallet init()")
         # open wallet or create wallet
         #TODO: Add linux support (LOL)
         if not exists(self.filePath + "\\" + walletFileName + ".keys"):
-            print("wallet DOES NOT EXIST LOL!!")
-            print()
-            if not self.create_wallet(restoreHeight, walletPassword):
+            if not self.create_wallet(self.restoreHeight, self.password):
                 print(f"Failed to create wallet {self.filePath}\{walletFileName}.keys\n")
                 self.cleanup()
                 return False
@@ -207,22 +230,28 @@ def main():
         pathToWalletFiles = f.readline().strip()
         publicAddress = f.readline().strip()
         privateViewKey = f.readline().strip()
-
+    restoreHeight = 2712290 # can be 0
     try:
-    
-        wallet = WalletClass(publicAddress, privateViewKey, walletFileName, walletPassword, monero_wallet_rpc_url, pathToWalletFiles)
-        
+        wallet = WalletClass(publicAddress, privateViewKey, walletFileName, walletPassword, monero_wallet_rpc_url, pathToWalletFiles, restoreHeight)
+
         if not wallet.init():
             print("Wallet failed to initialize, quitting")
             return False
+        wallet.auto_refresh(False)
+
+        # TODO: After getting the balance the first time, why does it take so long to get the balance again. (I realize I'm closing the wallet, but that shouldn't effect it imo)
+
+        wallet.get_height() # get height (auto_refresh is disabled so I should get the current height)
+        wallet.refresh(restoreHeight) # refresh the wallet manually
         
+        print("\n\n-----\n\n")
+
+        wallet.get_height() # get the new height
         
-        wallet.wait_for_balance()
-        wallet.print_response()
+        wallet.close_wallet() # save and close the wallet
         
-        wallet.close_wallet()
-        
-    except:
+    except Exception as e:
+        print(e.args)
         wallet.close_wallet()
 
 if __name__ == "__main__":
