@@ -28,9 +28,12 @@ class WalletClass():
         self.balance = -1
         self.unlockedBalance = -1
         self.transfers = []
+        self.oldTransfers = []
         self.account_index = 0
         self.subaddr_indices = [0]
         self.height = restoreHeight
+        self.excessXMR = 0
+        self.minimumFee = 10000
 
     def get_balance(self):
         self.rpc_input = {
@@ -143,13 +146,15 @@ class WalletClass():
     def clear_transfers(self):
         self.transfers = []
 
-    def get_transfers(self, min_height):
+    def get_transfers(self, min_height, max_height):
         self.rpc_input = {
             "method": "get_transfers",
             "params": {
                 "in": True,
                 "filter_by_height": True,
                 "min_height": min_height,
+                # Using max height for now for testing purposes only.
+                "max_height": max_height,
                 "pending": True,
                 "pool": True,
             }
@@ -218,10 +223,21 @@ class WalletClass():
     def update(self):
         # Just a template for what I think will happen in update(). I will need to handle this on a transaction by transaction basis.
 
-        self.get_transfers(self.height)
-        if len(self.transfers) > 1:
+        # should just check from current height (testing) self.height
+        self.get_transfers(2838688, 4839394)
+        if len(self.transfers) > 0:
             print("received new transfer:")
             print(self.transfers)
+            for transfer in self.transfers:
+                self.oldTransfers.append(transfer)
+                if transfer["amount"] > 10000000:
+                    print(f"{transfer['amount']} > 10000000")
+                    self.excessXMR += transfer["amount"] - self.minimumFee
+                    print(f"excessXMR = {self.excessXMR}")
+                else:
+                    print(f"{transfer['amount']} < 10000000")
+                    self.excessXMR += transfer["amount"]
+            self.clear_transfers()
 
 
 def main():
@@ -250,16 +266,16 @@ def main():
 
         print(f"The wallet contains {wallet.balance/(10**12)} XMR")
 
-        wallet.get_transfers(restoreHeight)
+        wallet.get_transfers(restoreHeight, 2838688)
 
         print(
             f"Transfers from {restoreHeight} to {wallet.height}({wallet.height-restoreHeight} blocks):")
         print(wallet.transfers)
 
-        print("\n\nClearing old transactions...")
+        print("\n\nClearing old transfers...")
         wallet.clear_transfers()
 
-        print("Waiting for transactions")
+        print("Waiting for transfers")
         loop = True
         while loop:
             wallet.update()
